@@ -1,0 +1,259 @@
+This is test
+
+podman create --label io.containers.autoupdate=registry --name myfedora quay.io/husky_parul/pup:latest sleep infinity
+podman generate systemd --new --name microshift > ./microshift-containerized.service
+
+
+sudo cp ./microshift-containerized.service /etc/systemd/system/microshift-containerized.service
+sudo cp microshift-containerized-configure-selinux /usr/bin/
+sudo cp microshift-containerized /usr/bin/
+sudo systemctl enable microshift-containerized.service --now
+
+
+
+doesn't works !!!
+
+sudo podman run --security-opt label=disable --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+            --rm --name microshift \
+            -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
+            -v microshift-data:/var/lib/microshift:rw,rshared,U,z,suid,dev,exec \
+            -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
+            -v /var/log:/var/log \
+            -v /etc/hosts:/etc/hosts:rw,rshared \
+            -v /var/lib/containers:/var/lib/containers:rw,rshared \
+            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+            quay.io/microshift/microshift:latest
+
+Doesnt !!
+sudo podman run --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+            --rm --name microshift \
+            -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
+            -v /var/lib/containers:/var/lib/containers:rw,rshared \
+            -v microshift-data:/var/lib/microshift:rw,rshared,U,z,suid,dev,exec \
+            -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
+            -v /var/log:/var/log \
+            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+            quay.io/microshift/microshift:latest
+
+
+sudo podman run  --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+            --rm --name microshift \
+            -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
+            -v /var/lib/microshift:/var/lib/microshift:rw,rshared \
+            -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
+            -v /var/log:/var/log \
+            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+            quay.io/microshift/microshift:latest
+
+
+
+
+  sudo podman run --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+            --rm --name microshift \
+            -v /var/run:/var/run \
+            -v /sys:/sys:ro \
+            -v /var/lib:/var/lib:rw,rshared \
+            -v /lib/modules:/lib/modules \
+            -v /etc:/etc \
+            -v /run/containers:/run/containers \
+            -v /var/log:/var/log \
+            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+            quay.io/microshift/microshift:latest
+
+sudo podman volume create microshift-data
+sudo podman run --log-level debug -d --rm --name microshift-aio --privileged -v /lib/modules:/lib/modules -v microshift-data:/var/lib  -p 6443:6443  quay.io/husky_parul/mio:latest
+
+
+podman generate systemd --new --name microshift-aio > ./microshift-aio.service
+
+sudo cp ./microshift-aio.service /etc/systemd/system/microshift-aio.service
+sudo systemctl enable microshift-aio.service --now
+
+
+sudo kubectl get pods -A --kubeconfig=/var/tmp/volumes/microshift-data/_data/resources/kubeadmin/kubeconfig
+sudo kubectl get pods -A --kubeconfig=/var/lib/microshift/resources/kubeadmin/kubeconfig
+
+    sudo podman stop microshift ; sudo podman volume rm --all ; sudo rm -rf /var/lib/microshift  ; sudo crictl rm -f --all ; sudo mkdir -p /var/lib/microshift ;
+
+-------------------------
+
+podman fresh install
+
+1. install go & podman  
+go version go1.16.8 linux/amd64
+wget https://golang.org/dl/go1.17.3.linux-amd64.tar.gz
+
+podman version
+Version:      3.4.1
+API Version:  3.4.1
+Go Version:   go1.16.8
+Built:        Wed Oct 20 14:35:28 2021
+OS/Arch:      linux/amd64
+
+
+ssh-keygen -t rsa
+
+/home/vagrant/.ssh/vag_gh_rsa
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/vag_gh_rsa
+chmod 644 ~/.ssh/vag_gh_rsa.pub
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/vag_gh_rsa
+
+
+2.clone microshift repo
+install crio from https://cri-o.io/
+dnf module list cri-o
+VERSION=1.20
+dnf module enable cri-o:$VERSION
+dnf install cri-o
+sudo cat /etc/cni/net.d/100-crio-bridge.conf 
+{
+    "cniVersion": "0.4.0",
+    "name": "crio",
+    "type": "bridge",
+    "bridge": "cni0",
+    "isGateway": true,
+    "ipMasq": true,
+    "hairpinMode": true,
+    "ipam": {
+        "type": "host-local",
+        "routes": [
+            { "dst": "0.0.0.0/0" }
+        ],
+        "ranges": [
+            [{ "subnet": "10.42.0.0/24" }]
+        ]
+    }
+}
+
+
+
+'{ \
+    "cniVersion": "0.4.0", \
+    "name": "crio", \
+    "type": "bridge", \
+    "bridge": "cni0", \
+    "isGateway": true, \
+    "ipMasq": true, \
+    "hairpinMode": true, \
+    "ipam": { \
+        "type": "host-local", \
+        "routes": [ \
+            { "dst": "0.0.0.0/0" } \
+        ], \
+        "ranges": [ \
+            [{ "subnet": "10.42.0.0/24" }] \
+        ] \
+    } \
+}' 
+
+3. 
+install crictl 
+https://github.com/kubernetes-sigs/cri-toocls/blob/master/docs/crictl.md#install-crictl
+edit  /etc/crictl.yaml
+runtime-endpoint: "unix:///var/run/crio/crio.sock"
+image-endpoint: "unix:///var/run/crio/crio.sock"
+timeout: 0
+debug: false
+pull-image-on-create: true
+disable-pull-on-run: false
+
+
+
+4. systemd steps
+
+5. podman ps
+podman logs -f microshift
+sudo crictl ps
+
+6. Install kubectl
+https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management 
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+sudo yum install -y kubectl
+
+
+yum install jq
+Giuseppe Scrivano12:24 PM
+cat /run/crun/*/config.json | jq . > /tmp/config2.json
+diff --color -Naur /tmp/config1.json /tmp/config2.json
+Giuseppe Scrivano12:55 PM
+findmnt -R -o PROPAGATION,TARGET /
+Giuseppe Scrivano1:02 PM
+mount --bind -make-shared /var/lib/kubelet
+Daniel Walsh1:04 PM
+mkdir /etc/containers/containers.conf.d
+cat > /etc/containers/containers.conf.d/volume.conf << __eof
+[engine]
+Daniel Walsh1:06 PM
+volume_path="/var/tmp/volumes"
+
+
+--------------------------------------------------------
+
+#!/bin/bash
+
+set -euxo pipefail
+
+sudo dnf -y install container-selinux
+sudo dnf -y install selinux-policy-devel 
+curl -L -o /tmp/microshift.fc https://raw.githubusercontent.com/redhat-et/microshift/main/packaging/selinux/microshift.fc
+curl -L -o /tmp/microshift.te https://raw.githubusercontent.com/redhat-et/microshift/main/packaging/selinux/microshift.te
+make -f /usr/share/selinux/devel/Makefile -C /tmp
+sudo dnf -y remove selinux-policy-devel
+sudo mkdir -p /var/run/flannel
+sudo mkdir -p /var/run/kubelet
+sudo mkdir -p /var/lib/kubelet/pods
+sudo mkdir -p /var/run/secrets/kubernetes.io/serviceaccount
+sudo mkdir -p /var/hpvolumes
+sudo semodule -i /tmp/microshift.pp
+sudo restorecon -v /var/hpvolumes
+sudo restorecon -vR /var/lib/kubelet/pods
+
+
+#!/bin/bash
+
+set -euxo pipefail
+
+mkdir -p /var/lib/microshift;
+
+if [[ $# -eq 0 ]] ; then
+        sudo podman run  --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+                    --rm --name microshift \
+                        -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
+                        -v /var/lib/microshift:/var/lib/microshift:rw,rshared \
+                        -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
+                        -v /var/log:/var/log \
+                        -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+                        quay.io/microshift/microshift:latest
+
+
+else 
+        if [ $1=="configure_selinux" ]; then
+                /bin/bash ./microshift-selinux ;
+                 sudo podman run  --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+                    --rm --name microshift \
+                        -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
+                        -v /var/lib/microshift:/var/lib/microshift:rw,rshared \
+                        -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
+                        -v /var/log:/var/log \
+                        -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
+                        quay.io/microshift/microshift:latest
+
+        fi
+
+fi
+
+--------------------  instance script ---------------------------------------
+
+
+
