@@ -25,24 +25,21 @@ sudo podman run --security-opt label=disable --sdnotify=container --label io.con
             quay.io/microshift/microshift:latest
 
 Doesnt !!
-sudo podman run --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+sudo podman run --sdnotify=container --label io.containers.autoupdate=registry --ipc=host --network=host --privileged -d \
             --rm --name microshift \
             -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
-            -v /var/lib/containers:/var/lib/containers:rw,rshared \
-            -v microshift-data:/var/lib/microshift:rw,rshared,U,z,suid,dev,exec \
+            -v microshift-data:/var/lib/microshift:rw,rshared \
             -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
             -v /var/log:/var/log \
-            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
             quay.io/microshift/microshift:latest
 
 
-sudo podman run  --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
+ podman run  --sdnotify=container --label io.containers.autoupdate=registry  --network=host --privileged -d \
             --rm --name microshift \
             -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared \
             -v /var/lib/microshift:/var/lib/microshift:rw,rshared \
             -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared \
             -v /var/log:/var/log \
-            -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig \
             quay.io/microshift/microshift:latest
 
 
@@ -191,11 +188,12 @@ findmnt -R -o PROPAGATION,TARGET /
 Giuseppe Scrivano1:02 PM
 mount --bind -make-shared /var/lib/kubelet
 Daniel Walsh1:04 PM
-mkdir /etc/containers/containers.conf.d
+
+mkdir -p /etc/containers/containers.conf.d;
 cat > /etc/containers/containers.conf.d/volume.conf << __eof
 [engine]
-Daniel Walsh1:06 PM
 volume_path="/var/tmp/volumes"
+eof__
 
 
 --------------------------------------------------------
@@ -257,3 +255,4 @@ fi
 
 
 
+cat <<EOF | kubectl apply -f -
