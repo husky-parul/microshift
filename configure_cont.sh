@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e -o pipefail
+
 #dnf update -y;
 
 dnf install -y podman golang wget;
